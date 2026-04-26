@@ -1,0 +1,10 @@
+[
+  { "slug": "beauty",            "name": "Beauty" },
+  { "slug": "fragrances",        "name": "Fragrances" },
+  { "slug": "furniture",         "name": "Furniture" },
+  { "slug": "groceries",         "name": "Groceries" },
+  { "slug": "home-decoration",   "name": "Home Decoration" },
+  { "slug": "laptops",           "name": "Laptops" },
+  { "slug": "smartphones",       "name": "Smartphones" },
+  { "slug": "tablets",           "name": "Tablets" }
+]

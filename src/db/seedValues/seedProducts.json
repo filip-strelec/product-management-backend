@@ -1,0 +1,42 @@
+[
+  {
+    "title": "Essence Mascara Lash Princess",
+    "description": "A volumising mascara that delivers dramatic lashes.",
+    "category": "beauty",
+    "price": 9.99,
+    "thumbnail": "https://cdn.dummyjson.com/products/images/beauty/Essence%20Mascara%20Lash%20Princess/thumbnail.png",
+    "tags": ["beauty", "mascara"]
+  },
+  {
+    "title": "Calvin Klein CK One",
+    "description": "A clean, fresh unisex fragrance.",
+    "category": "fragrances",
+    "price": 49.99,
+    "thumbnail": "https://cdn.dummyjson.com/products/images/fragrances/Calvin%20Klein%20CK%20One/thumbnail.png",
+    "tags": ["fragrance", "unisex"]
+  },
+  {
+    "title": "Annibale Colombo Bed",
+    "description": "Italian craftsmanship king-size bed.",
+    "category": "furniture",
+    "price": 1899.99,
+    "thumbnail": "https://cdn.dummyjson.com/products/images/furniture/Annibale%20Colombo%20Bed/thumbnail.png",
+    "tags": ["furniture", "bed"]
+  },
+  {
+    "title": "Apple MacBook Pro 14",
+    "description": "M3-powered Pro laptop, 14-inch Liquid Retina XDR.",
+    "category": "laptops",
+    "price": 1999,
+    "thumbnail": "https://cdn.dummyjson.com/products/images/laptops/Apple%20MacBook%20Pro%2014%20Inch%20Space%20Black/thumbnail.png",
+    "tags": ["laptop", "apple", "macbook"]
+  },
+  {
+    "title": "iPhone 15 Pro",
+    "description": "Titanium design, A17 Pro chip.",
+    "category": "smartphones",
+    "price": 1199,
+    "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/iPhone%2015%20Pro/thumbnail.png",
+    "tags": ["smartphone", "apple", "iphone"]
+  }
+]
