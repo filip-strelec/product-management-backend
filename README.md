@@ -163,24 +163,4 @@ may only depend on the one directly below it.
 - **Standalone app factory** (`createApp`) — keeps the listener separate from
   the app, so it can be imported by tests without binding to a port.
 
-## Trade-offs / what I'd improve with more time
 
-- Add an automated test suite (Vitest + supertest) covering each endpoint
-  and the validation edge cases.
-- Replace the schema-bootstrap with proper migrations.
-- Add request-id logging (pino + `pino-http`) and structured JSON logs.
-- Move from `LIKE %q%` to FTS5 (SQLite full-text search) for real search.
-- Add OpenAPI generation from the Zod schemas (`zod-to-openapi`).
-- Containerize (Dockerfile + compose) for parity across environments.
-
-## Out of scope (per the brief)
-
-- Authentication
-- Server-side validation *beyond* request shape (no business-rule auth/ownership)
-- Heavy unit-test coverage
-
-> Thumbnail uploads were originally listed as out-of-scope but were added on
-> request — see the *Thumbnail uploads* section above. Image deletion on
-> product update/delete is still skipped: orphaned files accumulate in
-> `UPLOAD_DIR` until cleaned manually. A real deployment should reference-count
-> uploads or run a periodic GC job.
