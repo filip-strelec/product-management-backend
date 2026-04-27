@@ -8,11 +8,21 @@ const optionalString = z
   .optional()
   .transform((v) => (v === '' ? undefined : v));
 
+const boolFromString = z
+  .enum(['true', 'false', '1', '0'])
+  .default('false')
+  .transform((v) => v === 'true' || v === '1');
+
 const schema = z.object({
   PORT: z.coerce.number().int().positive().default(3000),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   DATABASE_FILE: z.string().min(1).default('./data/products.db'),
   CORS_ORIGIN: z.string().min(1).default('http://localhost:4200'),
+
+  // Set to `true` when running behind a reverse proxy (nginx, ELB, ...) so
+  // `req.protocol` / `req.get('host')` reflect the original client request.
+  // Required for the upload endpoint to return correct https URLs in prod.
+  TRUST_PROXY: boolFromString,
 
   // Optional local seed files. When set, the seed runner loads from these
   // instead of fetching DummyJSON. See src/db/seedValues/README.md.

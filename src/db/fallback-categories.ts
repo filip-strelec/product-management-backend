@@ -1,4 +1,4 @@
-import type { Category } from '../modules/categories/category.types.js';
+import type { Category } from '../models/category.model.js';
 
 /**
  * Mirror of DummyJSON's category list, used when the network is unreachable

@@ -14,9 +14,8 @@ import { resolve } from 'node:path';
 import { env } from '../config/env.js';
 import { db } from './database.js';
 import { FALLBACK_CATEGORIES } from './fallback-categories.js';
-import { categoryRepository } from '../modules/categories/category.repository.js';
-import type { Category } from '../modules/categories/category.types.js';
-import type { CreateProductInput } from '../modules/products/product.types.js';
+import { categoryModel, type Category } from '../models/category.model.js';
+import type { CreateProductInput } from '../models/product.model.js';
 
 interface DummyJsonProduct {
   id: number;
@@ -104,27 +103,27 @@ const loadProductsFromFile = async (path: string): Promise<CreateProductInput[]>
 };
 
 const seedCategories = async (log: (msg: string) => void): Promise<void> => {
-  if (categoryRepository.count() > 0) return;
+  if (categoryModel.count() > 0) return;
 
   if (env.SEED_CATEGORIES_FILE) {
     try {
       const local = await loadCategoriesFromFile(env.SEED_CATEGORIES_FILE);
-      categoryRepository.bulkInsert(local);
+      categoryModel.bulkInsert(local);
       log(`Seeded ${local.length} categories from ${env.SEED_CATEGORIES_FILE}.`);
       return;
     } catch (err) {
       log(`Local category seed failed (${(err as Error).message}); using fallback list.`);
-      categoryRepository.bulkInsert(FALLBACK_CATEGORIES);
+      categoryModel.bulkInsert(FALLBACK_CATEGORIES);
       return;
     }
   }
 
   try {
     const remote = await fetchCategories();
-    categoryRepository.bulkInsert(remote);
+    categoryModel.bulkInsert(remote);
     log(`Seeded ${remote.length} categories from DummyJSON.`);
   } catch (err) {
-    categoryRepository.bulkInsert(FALLBACK_CATEGORIES);
+    categoryModel.bulkInsert(FALLBACK_CATEGORIES);
     log(
       `Seeded ${FALLBACK_CATEGORIES.length} categories from local fallback ` +
         `(DummyJSON unreachable: ${(err as Error).message}).`,

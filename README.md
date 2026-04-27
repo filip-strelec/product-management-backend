@@ -38,6 +38,7 @@ All vars are validated at boot via Zod (see `src/config/env.ts`).
 | `NODE_ENV`             | `development`          | `development` \| `production` \| `test`                                        |
 | `DATABASE_FILE`        | `./data/products.db`   | SQLite file path (created on first run)                                        |
 | `CORS_ORIGIN`          | `http://localhost:4200`| Allowed origin for the API                                                     |
+| `TRUST_PROXY`          | `false`                | Set `true` behind a reverse proxy so `X-Forwarded-*` is honored                |
 | `SEED_CATEGORIES_FILE` | *(unset)*              | Optional JSON path. When set, seeds categories from disk instead of DummyJSON. |
 | `SEED_PRODUCTS_FILE`   | *(unset)*              | Optional JSON path. When set, seeds products from disk instead of DummyJSON.   |
 | `UPLOAD_DIR`           | `./data/uploads`       | Directory where uploaded thumbnails are written (auto-created)                 |
@@ -61,13 +62,12 @@ directly in `<img src>`.
 
 - Accepted MIME types: `image/jpeg`, `image/png`, `image/webp`, `image/gif`
 - Per-file cap: `MAX_UPLOAD_BYTES` (default **1 MiB**)
-- The frontend additionally validates the file before uploading (same caps,
-  kept in sync via constants in `frontend/src/app/core/services/upload.service.ts`).
+- The frontend fetches these constraints from `GET /uploads/config` so client
+  and server stay in sync without duplicated constants.
 
-> Production note: when the API sits behind a reverse proxy under a sub-path
-> (e.g. `/api`), either rewrite the returned URL or have the proxy expose
-> `/uploads` directly. For this take-home both backend and frontend run on
-> their own ports and absolute URLs work out of the box.
+> Production note: when the API sits behind a reverse proxy, set
+> `TRUST_PROXY=true` so `req.protocol` / `req.get('host')` reflect the
+> original client request and the upload endpoint returns correct https URLs.
 
 ## API
 
@@ -81,6 +81,7 @@ Base URL: `http://localhost:3000`
 | POST   | `/products/add`       | Create a product                             |
 | PUT    | `/products/:id`       | Update a product (partial body allowed)      |
 | GET    | `/categories`         | List of `{ slug, name }` lookup values       |
+| GET    | `/uploads/config`     | `{ maxBytes, allowedMimeTypes }` for clients |
 | POST   | `/uploads/thumbnail`  | Multipart upload (`file` field) → `{ url }`  |
 | GET    | `/uploads/:filename`  | Serve an uploaded thumbnail                  |
 
@@ -88,7 +89,7 @@ Base URL: `http://localhost:3000`
 
 | Param    | Type   | Default | Notes                                       |
 | -------- | ------ | ------- | ------------------------------------------- |
-| `q`      | string | `''`    | Filters by `title` or `description` (LIKE)  |
+| `q`      | string | `''`    | Filters by `title` or `description` (LIKE; `%`/`_` are escaped) |
 | `limit`  | number | `30`    | 1–100                                       |
 | `skip`   | number | `0`     | Offset                                      |
 | `sortBy` | enum   | `id`    | `id` \| `title` \| `price` \| `category`    |
@@ -111,10 +112,14 @@ interface Product {
   price: number;
   thumbnail: string;
   tags: string[];
+  createdAt: string; // ISO-ish, set by SQLite
+  updatedAt: string;
 }
 ```
 
 ## Architecture
+
+Classic **MVC** (no views — the Angular frontend is the view layer):
 
 ```text
 src/
@@ -128,26 +133,20 @@ src/
 │   ├── fallback-categories.ts  # offline category list
 │   └── seedValues/             # optional local seed JSON (see folder README)
 ├── middleware/
-│   ├── async-handler.ts        # forwards async errors to next()
 │   ├── error-handler.ts        # central error + 404 handler
 │   └── validate.ts             # generic zod request validator
-├── modules/
-│   ├── products/
-│   │   ├── product.routes.ts       # URL → controller
-│   │   ├── product.controller.ts   # request/response only
-│   │   ├── product.service.ts      # business rules
-│   │   ├── product.repository.ts   # the only place that touches the db
-│   │   ├── product.schema.ts       # zod schemas
-│   │   └── product.types.ts        # Product, inputs, db row
-│   ├── categories/                 # /categories lookup (slug → name)
-│   └── uploads/
-│       ├── upload.middleware.ts    # multer config (disk storage + limits)
-│       └── upload.routes.ts        # POST /uploads/thumbnail
+├── models/                     # data layer: types, zod schemas, db access
+│   ├── product.model.ts        # Product type, schemas, CRUD against `products`
+│   └── category.model.ts       # Category type, lookup CRUD, slug validation
+├── controllers/                # request/response layer: routers + handlers
+│   ├── product.controller.ts   # /products router + handlers
+│   ├── category.controller.ts  # /categories router + handler
+│   └── upload.controller.ts    # /uploads router + multer config
 └── utils/http-error.ts         # typed HTTP errors
 ```
 
-**Layering rule:** routes → controller → service → repository → db. A layer
-may only depend on the one directly below it.
+**Dependency rule:** controllers → models → db. Controllers never touch the
+database directly; models never touch `req`/`res`.
 
 ## Key decisions
 

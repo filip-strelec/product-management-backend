@@ -1,5 +1,9 @@
-import { db } from '../../db/database.js';
-import type { Category } from './category.types.js';
+import { db } from '../db/database.js';
+
+export interface Category {
+  slug: string;
+  name: string;
+}
 
 const insertStmt = db.prepare<Category>(
   `INSERT OR IGNORE INTO categories (slug, name) VALUES (@slug, @name)`,
@@ -9,7 +13,7 @@ const insertMany = db.transaction((rows: Category[]) => {
   for (const row of rows) insertStmt.run(row);
 });
 
-export const categoryRepository = {
+export const categoryModel = {
   list(): Category[] {
     return db
       .prepare<[], Category>('SELECT slug, name FROM categories ORDER BY name ASC')
@@ -33,5 +37,10 @@ export const categoryRepository = {
   bulkInsert(rows: Category[]): void {
     if (rows.length === 0) return;
     insertMany(rows);
+  },
+
+  isValidSlug(slug: string): boolean {
+    if (slug === '') return true;
+    return categoryModel.exists(slug);
   },
 };
