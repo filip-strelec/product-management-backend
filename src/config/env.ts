@@ -1,13 +1,6 @@
 import 'dotenv/config';
 import { z } from 'zod';
 
-const optionalString = z
-  .string()
-  .trim()
-  .min(1)
-  .optional()
-  .transform((v) => (v === '' ? undefined : v));
-
 const boolFromString = z
   .enum(['true', 'false', '1', '0'])
   .default('false')
@@ -24,10 +17,9 @@ const schema = z.object({
   // Required for the upload endpoint to return correct https URLs in prod.
   TRUST_PROXY: boolFromString,
 
-  // Optional local seed files. When set, the seed runner loads from these
-  // instead of fetching DummyJSON. See src/db/seedValues/README.md.
-  SEED_PRODUCTS_FILE: optionalString,
-  SEED_CATEGORIES_FILE: optionalString,
+  // When `true`, the seed runner loads from the bundled JSON files in
+  // src/db/seedValues/ instead of fetching DummyJSON. See that folder's README.
+  SEED_FROM_LOCAL_FILES: boolFromString,
 
   // Thumbnail uploads. Disk path + per-file size cap.
   UPLOAD_DIR: z.string().min(1).default('./data/uploads'),

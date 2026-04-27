@@ -39,16 +39,16 @@ All vars are validated at boot via Zod (see `src/config/env.ts`).
 | `DATABASE_FILE`        | `./data/products.db`   | SQLite file path (created on first run)                                        |
 | `CORS_ORIGIN`          | `http://localhost:4200`| Allowed origin for the API                                                     |
 | `TRUST_PROXY`          | `false`                | Set `true` behind a reverse proxy so `X-Forwarded-*` is honored                |
-| `SEED_CATEGORIES_FILE` | *(unset)*              | Optional JSON path. When set, seeds categories from disk instead of DummyJSON. |
-| `SEED_PRODUCTS_FILE`   | *(unset)*              | Optional JSON path. When set, seeds products from disk instead of DummyJSON.   |
+| `SEED_FROM_LOCAL_FILES`| `false`                | When `true`, seed from `src/db/seedValues/*.json` instead of DummyJSON         |
 | `UPLOAD_DIR`           | `./data/uploads`       | Directory where uploaded thumbnails are written (auto-created)                 |
 | `MAX_UPLOAD_BYTES`     | `1048576` (1 MiB)      | Per-file size cap enforced by multer                                           |
 
 ### Custom seed data
 
-Set `SEED_PRODUCTS_FILE` and/or `SEED_CATEGORIES_FILE` in your `.env` to load
-seed data from local JSON files instead of fetching DummyJSON. Example fixtures
-and the file format reference live in [`src/db/seedValues/README.md`](./src/db/seedValues/README.md).
+Set `SEED_FROM_LOCAL_FILES=true` in your `.env` to load seed data from the
+bundled JSON fixtures in `src/db/seedValues/` instead of fetching DummyJSON.
+Edit those files in place to customise the dataset. The file format reference
+lives in [`src/db/seedValues/README.md`](./src/db/seedValues/README.md).
 
 The seed runner is **idempotent** — it only inserts when the target table is
 empty. To re-seed, delete the SQLite file (`rm data/products.db`) and restart.
@@ -92,7 +92,7 @@ Base URL: `http://localhost:3000`
 | `q`      | string | `''`    | Filters by `title` or `description` (LIKE; `%`/`_` are escaped) |
 | `limit`  | number | `30`    | 1–100                                       |
 | `skip`   | number | `0`     | Offset                                      |
-| `sortBy` | enum   | `id`    | `id` \| `title` \| `price` \| `category`    |
+| `sortBy` | enum   | `id`    | `id` \| `title` \| `price` \| `category` \| `createdAt` \| `updatedAt` |
 | `order`  | enum   | `asc`   | `asc` \| `desc`                             |
 
 Response shape:

@@ -5,26 +5,29 @@ Drop-in JSON files used by the seed runner instead of fetching DummyJSON.
 ## How it works
 
 On every API boot, `runSeed()` checks whether the `categories` and `products`
-tables are empty. If they are, it picks a source in this order:
+tables are empty. If they are, it picks a source based on the
+`SEED_FROM_LOCAL_FILES` env var:
 
-1. **Local file** — when the matching env var is set, the runner reads from disk.
-2. **DummyJSON** — over the network (`https://dummyjson.com`).
-3. **Hard-coded fallback** *(categories only)* — used when both above fail so
-   the UI always has a usable lookup list.
+1. **Local files** — when `SEED_FROM_LOCAL_FILES=true`, the runner reads
+   `seedCategories.json` and `seedProducts.json` from this folder.
+2. **DummyJSON** — otherwise (the default), over the network (`https://dummyjson.com`).
+3. **Hard-coded fallback** *(categories only)* — used when the chosen source
+   fails so the UI always has a usable lookup list.
 
 If the tables already contain rows, the runner does nothing — it is idempotent.
 
 ## Enabling local seed
 
-Set either or both env vars in `backend/.env` (paths are relative to
-`backend/` because that is the working directory at boot):
+Set the flag in `backend/.env`:
 
 ```ini
-SEED_CATEGORIES_FILE=./src/db/seedValues/seedCategories.json
-SEED_PRODUCTS_FILE=./src/db/seedValues/seedProducts.json
+SEED_FROM_LOCAL_FILES=true
 ```
 
-You can set just one of them — the other source still falls back to DummyJSON.
+The file paths are fixed (`src/db/seedValues/seedCategories.json` and
+`seedProducts.json`, resolved from `backend/` — the working directory at boot).
+Edit those JSON files in place to change the seeded dataset; both are loaded
+when the flag is on.
 
 After changing seed data you must reset the database for it to take effect
 (the runner skips populated tables):

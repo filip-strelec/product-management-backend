@@ -2,10 +2,10 @@
  * Idempotent seed runner — safe to call on every boot.
  *
  * Source resolution:
- *  - If `SEED_CATEGORIES_FILE` / `SEED_PRODUCTS_FILE` env vars are set, the
- *    runner reads those JSON files from disk.
+ *  - If `SEED_FROM_LOCAL_FILES=true`, the runner reads the JSON files at
+ *    `LOCAL_CATEGORIES_PATH` / `LOCAL_PRODUCTS_PATH` (relative to cwd).
  *  - Otherwise it fetches DummyJSON over the network.
- *  - If categories cannot be fetched, a hard-coded fallback is used so the
+ *  - If categories cannot be loaded, a hard-coded fallback is used so the
  *    UI still has a usable lookup. Product seed failures are swallowed so
  *    the API can still start (the user can re-run `npm run seed` later).
  */
@@ -29,6 +29,11 @@ interface DummyJsonProduct {
 
 const PRODUCTS_URL = 'https://dummyjson.com/products?limit=100';
 const CATEGORIES_URL = 'https://dummyjson.com/products/categories';
+
+// Fixed locations for the bundled seed fixtures. Resolved against process.cwd()
+// at read time, so `npm run dev` / `npm start` must be invoked from `backend/`.
+const LOCAL_CATEGORIES_PATH = './src/db/seedValues/seedCategories.json';
+const LOCAL_PRODUCTS_PATH = './src/db/seedValues/seedProducts.json';
 
 const readJsonFile = async <T>(relPath: string): Promise<T> => {
   const absPath = resolve(process.cwd(), relPath);
@@ -105,11 +110,11 @@ const loadProductsFromFile = async (path: string): Promise<CreateProductInput[]>
 const seedCategories = async (log: (msg: string) => void): Promise<void> => {
   if (categoryModel.count() > 0) return;
 
-  if (env.SEED_CATEGORIES_FILE) {
+  if (env.SEED_FROM_LOCAL_FILES) {
     try {
-      const local = await loadCategoriesFromFile(env.SEED_CATEGORIES_FILE);
+      const local = await loadCategoriesFromFile(LOCAL_CATEGORIES_PATH);
       categoryModel.bulkInsert(local);
-      log(`Seeded ${local.length} categories from ${env.SEED_CATEGORIES_FILE}.`);
+      log(`Seeded ${local.length} categories from ${LOCAL_CATEGORIES_PATH}.`);
       return;
     } catch (err) {
       log(`Local category seed failed (${(err as Error).message}); using fallback list.`);
@@ -134,11 +139,11 @@ const seedCategories = async (log: (msg: string) => void): Promise<void> => {
 const seedProducts = async (log: (msg: string) => void): Promise<void> => {
   if (productCount() > 0) return;
 
-  if (env.SEED_PRODUCTS_FILE) {
+  if (env.SEED_FROM_LOCAL_FILES) {
     try {
-      const local = await loadProductsFromFile(env.SEED_PRODUCTS_FILE);
+      const local = await loadProductsFromFile(LOCAL_PRODUCTS_PATH);
       insertProducts(local);
-      log(`Seeded ${local.length} products from ${env.SEED_PRODUCTS_FILE}.`);
+      log(`Seeded ${local.length} products from ${LOCAL_PRODUCTS_PATH}.`);
       return;
     } catch (err) {
       log(`Skipped product seed (local file unreadable: ${(err as Error).message}).`);

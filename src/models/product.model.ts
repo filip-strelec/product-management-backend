@@ -20,11 +20,19 @@ export interface ProductSearchResult {
   skip: number;
 }
 
+export type ProductSortField =
+  | 'id'
+  | 'title'
+  | 'price'
+  | 'category'
+  | 'createdAt'
+  | 'updatedAt';
+
 export interface ProductSearchParams {
   q: string;
   limit: number;
   skip: number;
-  sortBy: 'id' | 'title' | 'price' | 'category';
+  sortBy: ProductSortField;
   order: 'asc' | 'desc';
 }
 
@@ -56,9 +64,23 @@ export const searchQuerySchema = z.object({
   q: z.string().trim().default(''),
   limit: z.coerce.number().int().min(1).max(100).default(30),
   skip: z.coerce.number().int().min(0).default(0),
-  sortBy: z.enum(['id', 'title', 'price', 'category']).default('id'),
+  sortBy: z
+    .enum(['id', 'title', 'price', 'category', 'createdAt', 'updatedAt'])
+    .default('id'),
   order: z.enum(['asc', 'desc']).default('asc'),
 });
+
+// Maps API-facing sort keys (camelCase, matching the JSON shape) to the
+// underlying SQLite column names. Validated against an allow-list, so it is
+// safe to inline into the ORDER BY clause.
+const SORT_COLUMNS: Record<ProductSortField, string> = {
+  id: 'id',
+  title: 'title',
+  price: 'price',
+  category: 'category',
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+};
 
 export const createProductSchema = z.object({
   title: z.string().trim().min(1, 'Title is required').max(200),
@@ -93,8 +115,7 @@ export const productModel = {
   search(params: ProductSearchParams): ProductSearchResult {
     const { q, limit, skip, sortBy, order } = params;
 
-    // sortBy/order are validated against an allow-list, so it is safe to inline.
-    const orderClause = `ORDER BY ${sortBy} ${order.toUpperCase()}`;
+    const orderClause = `ORDER BY ${SORT_COLUMNS[sortBy]} ${order.toUpperCase()}`;
     // `ESCAPE '\'` lets users literally search for `%`/`_` without expanding
     // them as LIKE wildcards (escapeLike prefixes them with a backslash).
     const whereClause = q
