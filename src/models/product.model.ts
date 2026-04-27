@@ -137,7 +137,8 @@ export const productModel = {
       )
       .all(bindings);
 
-    const totalRow = db
+      //TODO: this could be 1 sql query..
+    const totalRow = db 
       .prepare<typeof bindings, { c: number }>(
         `SELECT COUNT(*) AS c FROM products ${whereClause}`,
       )

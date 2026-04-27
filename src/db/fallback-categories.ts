@@ -2,7 +2,9 @@ import type { Category } from '../models/category.model.js';
 
 /**
  * Mirror of DummyJSON's category list, used when the network is unreachable
- * during initial seed so the app still has a usable lookup.
+ * during initial seed so the app still has a usable lookup. (Only when not seeding from local files!)
+ * TODO: a bit of redundant/overEngineered IMO, as we have seeding from local files logic already
+ * 
  */
 export const FALLBACK_CATEGORIES: Category[] = [
   { slug: 'beauty',               name: 'Beauty' },
